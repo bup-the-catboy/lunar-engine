@@ -56,6 +56,10 @@ void LE_DestroyDrawList(LE_DrawList* dl) {
     LE_LL_DeepFree(dl, free);
 }
 
+int LE_DrawListSize(LE_DrawList* dl) {
+    return LE_LL_Size(dl);
+}
+
 unsigned int LE_DrawGetColor(LE_DrawList* dl) {
     return ((_LE_DrawList*)dl)->frst->value->color;
 }
