@@ -65,8 +65,8 @@ void LE_LL_Remove(void* list, void* value) {
             struct LinkedList_void* next = ll->next;
             struct LinkedList_void* prev = ll->prev;
             free(ll);
-            next->prev = prev;
-            prev->next = next;
+            if (next) next->prev = prev;
+            if (prev) prev->next = next;
             ll = next;
         }
         else ll = ll->next;
