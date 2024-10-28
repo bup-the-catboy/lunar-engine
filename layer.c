@@ -133,8 +133,8 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, LE_DrawList* 
         }
     }
 
-    float offsetX = (ll->value->cameraData.camPosX * layer->scrollSpeedX - screenW / 2.f / tileW) / layer->scaleW + layer->scrollOffsetX;
-    float offsetY = (ll->value->cameraData.camPosY * layer->scrollSpeedY - screenH / 2.f / tileH) / layer->scaleH + layer->scrollOffsetY;
+    float offsetX = (ll->value->cameraData.camPosX * layer->scrollSpeedX - screenW / 2.f) / tileW / layer->scaleW + layer->scrollOffsetX;
+    float offsetY = (ll->value->cameraData.camPosY * layer->scrollSpeedY - screenH / 2.f) / tileH / layer->scaleH + layer->scrollOffsetY;
     float tlx = offsetX - 1;
     float tly = offsetY - 1;
     float brx = offsetX + screenW / layer->scaleW / tileW + 1;
