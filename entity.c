@@ -212,7 +212,8 @@ void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scal
     _LE_Entity* e = (_LE_Entity*)entity;
     _LE_TexCallbackList* tex = e->textureCallbacks;
     void* texture = NULL;
-    int width, height, srcX, srcY, srcW, srcH;
+    float width, height;
+    int srcX, srcY, srcW, srcH;
     int absw, absh;
     while (tex->next) {
         tex = tex->next;
