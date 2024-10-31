@@ -19,6 +19,7 @@ typedef struct {
     _LE_TexCallbackList* textureCallbacks;
     _LE_UpdateCallbackList* updateCallbacks;
     _LE_CollisionCallbackList* collisionCallbacks;
+    _LE_EntityPropList* properties;
     float width, height;
     enum LE_EntityFlags flags;
 } _LE_EntityBuilder;
@@ -39,11 +40,28 @@ typedef struct {
 
 typedef DEFINE_LIST(_LE_Entity) _LE_EntityList;
 
+void _LE_AddPropertyToList(_LE_EntityPropList* list, LE_EntityProperty property, const char* name) {
+    _LE_EntityPropList* curr = list;
+    while (curr->next) {
+        curr = curr->next;
+        if (strcmp(curr->value->name, name) == 0) {
+            curr->value->value = property;
+            return;
+        }
+    }
+    _LE_EntityProperty* p = malloc(sizeof(_LE_EntityProperty));
+    p->name = strdup(name);
+    p->value = property;
+    LE_LL_Add(list, p);
+}
+
 LE_EntityBuilder* LE_CreateEntityBuilder() {
     _LE_EntityBuilder* builder = malloc(sizeof(_LE_EntityBuilder));
     memset(builder, 0, sizeof(_LE_EntityBuilder));
     builder->textureCallbacks = LE_LL_Create();
     builder->updateCallbacks = LE_LL_Create();
+    builder->collisionCallbacks = LE_LL_Create();
+    builder->properties = LE_LL_Create();
     return (LE_EntityBuilder*)builder;
 }
 
@@ -77,11 +95,16 @@ void LE_EntityBuilderClearFlags(LE_EntityBuilder* builder, enum LE_EntityFlags f
     ((_LE_EntityBuilder*)builder)->flags &= ~flags;
 }
 
+void LE_EntityBuilderSetProperty(LE_EntityBuilder* builder, LE_EntityProperty property, const char* name) {
+    _LE_AddPropertyToList(((_LE_EntityBuilder*)builder)->properties, property, name);
+}
+
 void LE_DestroyEntityBuilder(LE_EntityBuilder* builder) {
     _LE_EntityBuilder* b = (_LE_EntityBuilder*)builder;
     LE_LL_Free(b->textureCallbacks);
     LE_LL_Free(b->updateCallbacks);
     LE_LL_Free(b->collisionCallbacks);
+    LE_LL_DeepFree(b->properties, free);
     free(builder);
 }
 
@@ -109,6 +132,11 @@ LE_Entity* LE_CreateEntity(LE_EntityList* list, LE_EntityBuilder* builder, float
     entity->collisionCallbacks = b->collisionCallbacks;
     entity->properties = LE_LL_Create();
     entity->parent = LE_LL_Add(list, entity);
+    _LE_EntityPropList* curr = b->properties;
+    while (curr->next) {
+        curr = curr->next;
+        _LE_AddPropertyToList(entity->properties, curr->value->value, curr->value->name);
+    }
     return (LE_Entity*)entity;
 }
 
@@ -125,18 +153,7 @@ void LE_EntityAssignTilemap(LE_EntityList* list, LE_Tilemap* tilemap) {
 }
 
 void LE_EntitySetProperty(LE_Entity* entity, LE_EntityProperty property, const char* name) {
-    _LE_EntityPropList* prop = ((_LE_Entity*)entity)->properties;
-    while (prop->next) {
-        prop = prop->next;
-        if (strcmp(prop->value->name, name) == 0) {
-            prop->value->value = property;
-            return;
-        }
-    }
-    _LE_EntityProperty* p = malloc(sizeof(_LE_EntityProperty));
-    p->name = strdup(name);
-    p->value = property;
-    LE_LL_Add(((_LE_Entity*)entity)->properties, p);
+    _LE_AddPropertyToList(((_LE_Entity*)entity)->properties, property, name);
 }
 
 void LE_EntityDelProperty(LE_Entity* entity, const char* name) {
@@ -167,6 +184,11 @@ bool LE_EntityGetProperty(LE_Entity* entity, LE_EntityProperty* property, const 
 
 int LE_EntityNumProperties(LE_Entity* entity) {
     return LE_LL_Size(((_LE_Entity*)entity)->properties);
+}
+
+LE_EntityProperty LE_EntityGetPropertyOrDefault(LE_Entity *entity, LE_EntityProperty def, const char *name) {
+    LE_EntityGetProperty(entity, &def, name);
+    return def;
 }
 
 const char* LE_EntityGetPropertyKey(LE_Entity* entity, int index) {
