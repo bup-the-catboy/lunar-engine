@@ -148,6 +148,7 @@ void LE_EntityDelProperty(LE_Entity* entity, const char* name) {
             LE_LL_Remove(prop->frst, value);
             free(value->name);
             free(value);
+            return;
         }
     }
 }
@@ -157,7 +158,7 @@ bool LE_EntityGetProperty(LE_Entity* entity, LE_EntityProperty* property, const 
     while (prop->next) {
         prop = prop->next;
         if (strcmp(prop->value->name, name) == 0) {
-            memcpy(property, &prop->value->value, sizeof(LE_EntityProperty));
+            if (property) memcpy(property, &prop->value->value, sizeof(LE_EntityProperty));
             return true;
         }
     }
