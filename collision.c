@@ -64,11 +64,15 @@ void CONCAT(LE_RunCollision, AXIS)(LE_Entity* entity) {                         
             if (!LE_RectIntersectsRect(fx, fy, tx, ty, x, y, x + 1, y + 1)) continue;                                         \
             if (side) {                                                                                                       \
                 LE_TileCollisionEvent(tile, tilemap, entity, x, y, RUN(DIR_DR, AXIS));                                        \
-                if (solid) RUN(entity->pos, AXIS) = RUN(CORRECT_TILE_DR, AXIS);                                               \
+                if (solid) {                                                                                                  \
+                    LE_EntitySetProperty(entity, (LE_EntityProperty){ .asInt = RUN(DIR_DR, AXIS) }, "collision");             \
+                    RUN(entity->pos, AXIS) = RUN(CORRECT_TILE_DR, AXIS);                                                      \
+                }                                                                                                             \
             }                                                                                                                 \
             else {                                                                                                            \
                 LE_TileCollisionEvent(tile, tilemap, entity, x, y, RUN(DIR_UL, AXIS));                                        \
                 if (solid) {                                                                                                  \
+                    LE_EntitySetProperty(entity, (LE_EntityProperty){ .asInt = RUN(DIR_UL, AXIS) }, "collision");             \
                     RUN(entity->pos, AXIS) = RUN(CORRECT_TILE_UL, AXIS);                                                      \
                     if (RUN(IS_Y, AXIS)) entity->flags |= LE_EntityFlags_OnGround;                                            \
                 }                                                                                                             \
@@ -96,13 +100,17 @@ void CONCAT(LE_RunCollision, AXIS)(LE_Entity* entity) {                         
         LE_EntityCollision(curr, entity);                                                                                     \
         if (solid) {                                                                                                          \
             if (side) {                                                                                                       \
+                LE_EntitySetProperty(entity, (LE_EntityProperty){ .asInt = RUN(DIR_DR, AXIS) }, "collision");                 \
                 RUN(entity->pos, AXIS) = RUN(CORRECT_ENTITY_DR, AXIS);                                                        \
                 if (RUN(IS_Y, AXIS)) {                                                                                        \
                     LE_EntitySetPlatform(entity, curr);                                                                       \
                     entity->flags |= LE_EntityFlags_OnGround;                                                                 \
                 }                                                                                                             \
             }                                                                                                                 \
-            else RUN(entity->pos, AXIS) = RUN(CORRECT_ENTITY_UL, AXIS);                                                       \
+            else {                                                                                                            \
+                LE_EntitySetProperty(entity, (LE_EntityProperty){ .asInt = RUN(DIR_UL, AXIS) }, "collision");                 \
+                RUN(entity->pos, AXIS) = RUN(CORRECT_ENTITY_UL, AXIS);                                                        \
+            }                                                                                                                 \
             collided = true;                                                                                                  \
         }                                                                                                                     \
         iter = LE_EntityListNext(iter);                                                                                       \
