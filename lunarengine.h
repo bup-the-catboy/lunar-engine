@@ -138,6 +138,7 @@ void LE_UpdateEntities(LE_EntityList* list);
 void LE_UpdateEntity(LE_Entity* entity);
 void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scaleH, LE_DrawList* dl);
 void LE_DeleteEntity(LE_Entity* entity);
+void LE_DestroyEntity(LE_Entity* entity);
 void LE_DestroyEntityList(LE_EntityList* list);
 int  LE_NumEntities(LE_EntityList* list);
 LE_EntityList* LE_EntityGetList(LE_Entity* entity);

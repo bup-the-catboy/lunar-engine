@@ -29,6 +29,7 @@ typedef struct {
     float velX, velY;
     float width, height;
     enum LE_EntityFlags flags;
+    bool deleted;
     LE_Entity* platform;
     _LE_EntityPropList* properties;
     _LE_TexCallbackList* textureCallbacks;
@@ -126,6 +127,7 @@ LE_Entity* LE_CreateEntity(LE_EntityList* list, LE_EntityBuilder* builder, float
     entity->width = b->width;
     entity->height = b->height;
     entity->flags = b->flags;
+    entity->deleted = false;
     entity->platform = NULL;
     entity->textureCallbacks = b->textureCallbacks;
     entity->updateCallbacks = b->updateCallbacks;
@@ -212,15 +214,23 @@ void LE_EntityCollision(LE_Entity* entity, LE_Entity* collider) {
 
 void LE_UpdateEntities(LE_EntityList* entities) {
     _LE_EntityList* e = (_LE_EntityList*)entities;
-    while (e->next) {
-        e = e->next;
-        LE_UpdateEntity((LE_Entity*)e->value);
+    _LE_EntityList* curr = e;
+    while (curr->next) {
+        curr = curr->next;
+        LE_UpdateEntity((LE_Entity*)curr->value);
+    }
+    curr = e->next;
+    while (curr) {
+        _LE_EntityList* next = curr->next;
+        if (curr->value->deleted) LE_DestroyEntity((LE_Entity*)curr->value);
+        curr = next;
     }
 }
 
 void LE_UpdateEntity(LE_Entity* entity) {
     _LE_Entity* e = (_LE_Entity*)entity;
     _LE_UpdateCallbackList* update = e->updateCallbacks;
+    if (e->deleted) return;
     while (update->next) {
         update = update->next;
         ((EntityUpdateCallback)update->value)(entity);
@@ -238,6 +248,7 @@ void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scal
     float width, height;
     int srcX, srcY, srcW, srcH;
     int absw, absh;
+    if (e->deleted) return;
     while (tex->next) {
         tex = tex->next;
         texture = ((EntityTextureCallback)tex->value)(entity, &width, &height, &srcX, &srcY, &srcW, &srcH);
@@ -250,6 +261,10 @@ void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scal
 }
 
 void LE_DeleteEntity(LE_Entity* entity) {
+    ((_LE_Entity*)entity)->deleted = true;
+}
+
+void LE_DestroyEntity(LE_Entity* entity) {
     _LE_Entity* e = (_LE_Entity*)entity;
     if ((void*)e->parent != (void*)((_LE_EntityList*)e->parent)->frst) {
         LE_LL_DeepFree(e->properties, free);
