@@ -29,6 +29,7 @@ typedef struct {
     float velX, velY;
     float width, height;
     enum LE_EntityFlags flags;
+    float prevPosX, prevPosY;
     bool deleted;
     LE_Entity* platform;
     _LE_EntityPropList* properties;
@@ -212,12 +213,12 @@ void LE_EntityCollision(LE_Entity* entity, LE_Entity* collider) {
     }
 }
 
-void LE_UpdateEntities(LE_EntityList* entities) {
+void LE_UpdateEntities(LE_EntityList* entities, float delta_time) {
     _LE_EntityList* e = (_LE_EntityList*)entities;
     _LE_EntityList* curr = e;
     while (curr->next) {
         curr = curr->next;
-        LE_UpdateEntity((LE_Entity*)curr->value);
+        LE_UpdateEntity((LE_Entity*)curr->value, delta_time);
     }
     curr = e->next;
     while (curr) {
@@ -227,7 +228,7 @@ void LE_UpdateEntities(LE_EntityList* entities) {
     }
 }
 
-void LE_UpdateEntity(LE_Entity* entity) {
+void LE_UpdateEntity(LE_Entity* entity, float delta_time) {
     _LE_Entity* e = (_LE_Entity*)entity;
     _LE_UpdateCallbackList* update = e->updateCallbacks;
     if (e->deleted) return;
@@ -235,10 +236,17 @@ void LE_UpdateEntity(LE_Entity* entity) {
         update = update->next;
         ((EntityUpdateCallback)update->value)(entity);
     }
+    e->prevPosX = e->posX;
+    e->prevPosY = e->posY;
     e->posY += e->velY;
     LE_RunCollisionY(entity);
     e->posX += e->velX;
     LE_RunCollisionX(entity);
+}
+
+void LE_EntityGetPrevPosition(LE_Entity* entity, float* x, float* y) {
+    if (x) *x = ((_LE_Entity*)entity)->prevPosX;
+    if (y) *y = ((_LE_Entity*)entity)->prevPosY;
 }
 
 void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scaleH, LE_DrawList* dl) {

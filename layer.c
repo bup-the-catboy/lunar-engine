@@ -7,12 +7,17 @@ typedef struct {
     float scrollOffsetX, scrollSpeedX;
     float scrollOffsetY, scrollSpeedY;
     float scaleW, scaleH;
+    float prevScrollOffsetX, prevScrollSpeedX;
+    float prevScrollOffsetY, prevScrollSpeedY;
+    float prevScaleW, prevScaleH;
     enum LE_LayerType type;
     void* ptr;
     LE_LayerList* parent;
     struct {
         float camPosX;
         float camPosY;
+        float prevCamPosX;
+        float prevCamPosY;
     } cameraData;
 } _LE_Layer;
 
@@ -106,13 +111,29 @@ void* LE_LayerGetDataPointer(LE_Layer* layer) {
     return ((_LE_Layer*)layer)->ptr;
 }
 
-void LE_Draw(LE_LayerList* layers, int screenW, int screenH, LE_DrawList* dl) {
-    for (int i = LE_LL_Size(layers) - 1; i >= 0; i--) {
-        LE_DrawSingleLayer((LE_Layer*)LE_LL_Get(layers, i), screenW, screenH, dl);
+void LE_UpdateLayerList(LE_LayerList* layers) {
+    _LE_LayerList* ll = (_LE_LayerList*)layers;
+    ll->value->cameraData.prevCamPosX = ll->value->cameraData.camPosX;
+    ll->value->cameraData.prevCamPosY = ll->value->cameraData.camPosY;
+    while (ll->next) {
+        ll = ll->next;
+        ll->value->prevScaleW = ll->value->scaleW;
+        ll->value->prevScaleH = ll->value->scaleH;
+        ll->value->prevScrollSpeedX = ll->value->scrollSpeedX;
+        ll->value->prevScrollSpeedY = ll->value->scrollSpeedY;
+        ll->value->prevScrollOffsetX = ll->value->scrollOffsetX;
+        ll->value->prevScrollOffsetY = ll->value->scrollOffsetY;
     }
 }
 
-void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, LE_DrawList* dl) {
+void LE_Draw(LE_LayerList* layers, int screenW, int screenH, float interpolation, LE_DrawList* dl) {
+    for (int i = LE_LL_Size(layers) - 1; i >= 0; i--) {
+        LE_DrawSingleLayer((LE_Layer*)LE_LL_Get(layers, i), screenW, screenH, interpolation, dl);
+    }
+}
+
+void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpolation, LE_DrawList* dl) {
+    extern void LE_EntityGetPrevPosition(LE_Entity* entity, float* x, float* y);
     _LE_Layer* l = (_LE_Layer*)layer;
     _LE_LayerList* ll = ((_LE_LayerList*)l->parent)->frst;
 
@@ -133,30 +154,39 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, LE_DrawList* 
         }
     }
 
-    float offsetX = (ll->value->cameraData.camPosX * layer->scrollSpeedX - screenW / 2.f) / tileW / layer->scaleW + layer->scrollOffsetX;
-    float offsetY = (ll->value->cameraData.camPosY * layer->scrollSpeedY - screenH / 2.f) / tileH / layer->scaleH + layer->scrollOffsetY;
+    float camPosX = (ll->value->cameraData.camPosX - ll->value->cameraData.prevCamPosX) * interpolation + ll->value->cameraData.prevCamPosX;
+    float camPosY = (ll->value->cameraData.camPosY - ll->value->cameraData.prevCamPosY) * interpolation + ll->value->cameraData.prevCamPosY;
+    float scaleW = (l->prevScaleW - l->scaleW) * interpolation + l->prevScaleW;
+    float scaleH = (l->prevScaleH - l->scaleH) * interpolation + l->prevScaleH;
+    float scrollSpeedX = (l->prevScrollSpeedX - l->scrollSpeedX) * interpolation + l->prevScrollSpeedX;
+    float scrollSpeedY = (l->prevScrollSpeedY - l->scrollSpeedY) * interpolation + l->prevScrollSpeedY;
+    float scrollOffsetX = (l->prevScrollOffsetX - l->scrollOffsetX) * interpolation + l->prevScrollOffsetX;
+    float scrollOffsetY = (l->prevScrollOffsetY - l->scrollOffsetY) * interpolation + l->prevScrollOffsetY;
+
+    float offsetX = (camPosX * scrollSpeedX - screenW / 2.f) / tileW / scaleW + scrollOffsetX;
+    float offsetY = (camPosY * scrollSpeedY - screenH / 2.f) / tileH / scaleH + scrollOffsetY;
     float tlx = offsetX - 1;
     float tly = offsetY - 1;
-    float brx = offsetX + screenW / layer->scaleW / tileW + 1;
-    float bry = offsetY + screenH / layer->scaleH / tileH + 1;
+    float brx = offsetX + screenW / scaleW / tileW + 1;
+    float bry = offsetY + screenH / scaleH / tileH + 1;
     switch (l->type) {
-        case LE_LayerType_Tilemap:
-            {
-                LE_DrawPartialTilemap(l->ptr, -offsetX, -offsetY, tlx, tly, brx, bry, l->scaleW, l->scaleH, dl);
+        case LE_LayerType_Tilemap: {
+            LE_DrawPartialTilemap(l->ptr, -offsetX, -offsetY, tlx, tly, brx, bry, scaleW, scaleH, dl);
+        } break;
+        case LE_LayerType_Entity: {
+            LE_EntityListIter* iter = LE_EntityListGetIter(l->ptr);
+            while (iter) {
+                LE_Entity* entity = LE_EntityListGet(iter);
+                float prevX, prevY;
+                LE_EntityGetPrevPosition(entity, &prevX, &prevY);
+                float x = (entity->posX - prevX) * interpolation + prevX;
+                float y = (entity->posY - prevY) * interpolation + prevY;
+                LE_DrawEntity(entity, (x - offsetX) * tileW * scaleW, (y - offsetY) * tileH * scaleH, scaleW, scaleH, dl);
+                iter = LE_EntityListNext(iter);
             }
-            break;
-        case LE_LayerType_Entity:
-            {
-                LE_EntityListIter* iter = LE_EntityListGetIter(l->ptr);
-                while (iter) {
-                    LE_Entity* entity = LE_EntityListGet(iter);
-                    LE_DrawEntity(entity, (entity->posX - offsetX) * tileW * l->scaleW, (entity->posY - offsetY) * tileH * l->scaleH, l->scaleW, l->scaleH, dl);
-                    iter = LE_EntityListNext(iter);
-                }
-            }
-            break;
+        } break;
         case LE_LayerType_Custom:
-            ((CustomLayer)l->ptr)(dl, offsetX, offsetY, l->scaleW, l->scaleH);
+            ((CustomLayer)l->ptr)(dl, offsetX, offsetY, scaleW, scaleH);
             break;
     }
 }
