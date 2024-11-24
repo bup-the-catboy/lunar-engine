@@ -238,9 +238,9 @@ void LE_UpdateEntity(LE_Entity* entity, float delta_time) {
     }
     e->prevPosX = e->posX;
     e->prevPosY = e->posY;
-    e->posY += e->velY;
+    e->posY += e->velY * delta_time;
     LE_RunCollisionY(entity);
-    e->posX += e->velX;
+    e->posX += e->velX * delta_time;
     LE_RunCollisionX(entity);
 }
 
