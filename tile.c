@@ -187,6 +187,5 @@ void LE_DrawPartialTilemap(LE_Tilemap* tilemap, float x, float y, int fromX, int
 }
 
 void LE_DestroyTilemap(LE_Tilemap* tilemap) {
-    free(((_LE_Tilemap*)tilemap)->tileset);
     free(tilemap);
 }
