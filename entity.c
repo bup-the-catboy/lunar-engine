@@ -30,6 +30,7 @@ typedef struct {
     float width, height;
     enum LE_EntityFlags flags;
     float prevPosX, prevPosY;
+    float lastDrawnX, lastDrawnY;
     bool deleted;
     LE_Entity* platform;
     _LE_EntityPropList* properties;
@@ -265,7 +266,15 @@ void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scal
     if (!texture) return;
     absw = width  * (width  < 0 ? -1 : 1);
     absh = height * (height < 0 ? -1 : 1);
-    LE_DrawListAppend(dl, texture, x - (absw * scaleW) / 2, y - (absh * scaleH), width * scaleW, height * scaleH, srcX, srcY, srcW, srcH);
+    e->lastDrawnX = x - (absw * scaleW) / 2;
+    e->lastDrawnY = y - (absh * scaleH);
+    LE_DrawListAppend(dl, texture, e->lastDrawnX, e->lastDrawnY, width * scaleW, height * scaleH, srcX, srcY, srcW, srcH);
+}
+
+void LE_EntityLastDrawnPos(LE_Entity* entity, float* x, float* y) {
+    _LE_Entity* e = (_LE_Entity*)entity;
+    if (x) *x = e->lastDrawnX;
+    if (y) *y = e->lastDrawnY;
 }
 
 void LE_DeleteEntity(LE_Entity* entity) {
