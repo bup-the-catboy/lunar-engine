@@ -291,7 +291,7 @@ void LE_DestroyEntity(LE_Entity* entity) {
 }
 
 void LE_DestroyEntityList(LE_EntityList* list) {
-    LE_LL_DeepFree(list, free);
+    LE_LL_DeepFree(list, (void(*)(void*))LE_DestroyEntity);
 }
 
 int LE_NumEntities(LE_EntityList* list) {
