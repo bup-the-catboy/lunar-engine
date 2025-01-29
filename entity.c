@@ -290,8 +290,16 @@ void LE_DestroyEntity(LE_Entity* entity) {
     free(entity);
 }
 
+void LE_DestroyEntityInner(LE_Entity* entity) {
+    _LE_Entity* e = (_LE_Entity*)entity;
+    if ((void*)e->parent != (void*)((_LE_EntityList*)e->parent)->frst) {
+        LE_LL_DeepFree(e->properties, free);
+    }
+    free(entity);
+}
+
 void LE_DestroyEntityList(LE_EntityList* list) {
-    LE_LL_DeepFree(list, (void(*)(void*))LE_DestroyEntity);
+    LE_LL_DeepFree(list, (void(*)(void*))LE_DestroyEntityInner);
 }
 
 int LE_NumEntities(LE_EntityList* list) {
