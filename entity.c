@@ -21,14 +21,14 @@ typedef struct {
     _LE_CollisionCallbackList* collisionCallbacks;
     _LE_EntityPropList* properties;
     float width, height;
-    enum LE_EntityFlags flags;
+    LE_EntityFlags flags;
 } _LE_EntityBuilder;
 
 typedef struct {
     float posX, posY;
     float velX, velY;
     float width, height;
-    enum LE_EntityFlags flags;
+    LE_EntityFlags flags;
     float prevPosX, prevPosY;
     float lastDrawnX, lastDrawnY;
     bool deleted;
@@ -86,15 +86,15 @@ void LE_EntityBuilderSetHitboxSize(LE_EntityBuilder* builder, float width, float
     eb->height = height;
 }
 
-void LE_EntityBuilderSetFlags(LE_EntityBuilder* builder, enum LE_EntityFlags flags) {
+void LE_EntityBuilderSetFlags(LE_EntityBuilder* builder, LE_EntityFlags flags) {
     ((_LE_EntityBuilder*)builder)->flags = flags;
 }
 
-void LE_EntityBuilderAppendFlags(LE_EntityBuilder* builder, enum LE_EntityFlags flags) {
+void LE_EntityBuilderAppendFlags(LE_EntityBuilder* builder, LE_EntityFlags flags) {
     ((_LE_EntityBuilder*)builder)->flags |= flags;
 }
 
-void LE_EntityBuilderClearFlags(LE_EntityBuilder* builder, enum LE_EntityFlags flags) {
+void LE_EntityBuilderClearFlags(LE_EntityBuilder* builder, LE_EntityFlags flags) {
     ((_LE_EntityBuilder*)builder)->flags &= ~flags;
 }
 

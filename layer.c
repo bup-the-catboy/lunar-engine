@@ -10,7 +10,7 @@ typedef struct {
     float prevScrollOffsetX, prevScrollSpeedX;
     float prevScrollOffsetY, prevScrollSpeedY;
     float prevScaleW, prevScaleH;
-    enum LE_LayerType type;
+    LE_LayerType type;
     void* ptr;
     LE_LayerList* parent;
     struct {
@@ -31,7 +31,7 @@ LE_LayerList* LE_CreateLayerList() {
     return (LE_LayerList*)list;
 }
 
-LE_Layer* LE_MakeLayer(LE_LayerList* layers, void* data, enum LE_LayerType type) {
+LE_Layer* LE_MakeLayer(LE_LayerList* layers, void* data, LE_LayerType type) {
     _LE_Layer* l = malloc(sizeof(_LE_Layer));
     l->scrollOffsetX = l->scrollOffsetY = 0;
     l->scrollSpeedX = l->scrollSpeedY = 1;
@@ -103,7 +103,7 @@ void LE_GetCameraPos(LE_LayerList* layers, float* camX, float* camY) {
     if (camY) *camY = ll->value->cameraData.camPosY;
 }
 
-enum LE_LayerType LE_LayerGetType(LE_Layer* layer) {
+LE_LayerType LE_LayerGetType(LE_Layer* layer) {
     return ((_LE_Layer*)layer)->type;
 }
 
