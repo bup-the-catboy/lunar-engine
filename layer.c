@@ -1,6 +1,7 @@
 #include "linked_list.h"
 #include "lunarengine.h"
 
+#include <alloca.h>
 #include <stdlib.h>
 
 typedef struct {
@@ -20,6 +21,11 @@ typedef struct {
         float prevCamPosY;
     } cameraData;
 } _LE_Layer;
+
+typedef struct {
+    void* params;
+    CustomLayer callback;
+} _LE_CustomLayer;
 
 typedef DEFINE_LIST(_LE_Layer) _LE_LayerList;
 
@@ -50,8 +56,11 @@ LE_Layer* LE_AddEntityLayer(LE_LayerList* layers, LE_EntityList* entities) {
     return LE_MakeLayer(layers, entities, LE_LayerType_Entity);
 }
 
-LE_Layer* LE_AddCustomLayer(LE_LayerList* layers, CustomLayer callback) {
-    return LE_MakeLayer(layers, callback, LE_LayerType_Custom);
+LE_Layer* LE_AddCustomLayer(LE_LayerList* layers, CustomLayer callback, void* params) {
+    _LE_CustomLayer* layer = malloc(sizeof(_LE_CustomLayer));
+    layer->callback = callback;
+    layer->params = params;
+    return LE_MakeLayer(layers, layer, LE_LayerType_Custom);
 }
 
 LE_Layer* LE_LayerGetByIndex(LE_LayerList* layers, int index) {
@@ -185,20 +194,27 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpo
                 iter = LE_EntityListNext(iter);
             }
         } break;
-        case LE_LayerType_Custom:
-            ((CustomLayer)l->ptr)(dl, offsetX, offsetY, scaleW, scaleH);
-            break;
+        case LE_LayerType_Custom: {
+            _LE_CustomLayer* custom = (_LE_CustomLayer*)l;
+            custom->callback(dl, custom->params, offsetX, offsetY, scaleW, scaleH);
+        } break;
     }
+}
+
+void LE_DisposeLayer(LE_Layer* layer) {
+    _LE_Layer* l = (_LE_Layer*)layer;
+    if (l->type == LE_LayerType_Custom) free(l->ptr);
+    free(layer);
 }
 
 void LE_DestroyLayer(LE_Layer* layer) {
     _LE_LayerList* ll = ((_LE_LayerList*)((_LE_Layer*)layer)->parent)->frst;
     LE_LL_Remove(ll, layer);
-    free(layer);
+    LE_DisposeLayer(layer);
 }
 
 void LE_DestroyLayerList(LE_LayerList* layers) {
-    LE_LL_DeepFree(layers, free);
+    LE_LL_DeepFree(layers, (void(*)(void*))LE_DisposeLayer);
 }
 
 int LE_NumLayers(LE_LayerList* layers) {
