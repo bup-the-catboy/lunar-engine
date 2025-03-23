@@ -195,7 +195,7 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpo
             }
         } break;
         case LE_LayerType_Custom: {
-            _LE_CustomLayer* custom = (_LE_CustomLayer*)l;
+            _LE_CustomLayer* custom = (_LE_CustomLayer*)l->ptr;
             custom->callback(dl, custom->params, offsetX, offsetY, scaleW, scaleH);
         } break;
     }
