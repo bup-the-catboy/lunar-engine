@@ -1,7 +1,6 @@
 #include "linked_list.h"
 #include "lunarengine.h"
 
-#include <alloca.h>
 #include <stdlib.h>
 
 typedef struct {
