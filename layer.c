@@ -140,6 +140,10 @@ void LE_Draw(LE_LayerList* layers, int screenW, int screenH, float interpolation
     }
 }
 
+static int sort_entities(const void* a, const void* b) {
+    return ((LE_Entity*)a)->drawPriority - ((LE_Entity*)b)->drawPriority;
+}
+
 void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpolation, LE_DrawList* dl) {
     extern void LE_EntityGetPrevPosition(LE_Entity* entity, float* x, float* y);
     _LE_Layer* l = (_LE_Layer*)layer;
@@ -182,15 +186,22 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpo
             LE_DrawPartialTilemap(l->ptr, -offsetX, -offsetY, tlx, tly, brx, bry, scaleW, scaleH, dl);
         } break;
         case LE_LayerType_Entity: {
+            int index = 0;
+            int num_ents = LE_NumEntities(l->ptr);
+            LE_Entity* entities[LE_NumEntities(l->ptr)];
             LE_EntityListIter* iter = LE_EntityListGetIter(l->ptr);
             while (iter) {
-                LE_Entity* entity = LE_EntityListGet(iter);
+                entities[index++] = LE_EntityListGet(iter);
+                iter = LE_EntityListNext(iter);
+            }
+            qsort(entities, num_ents, sizeof(*entities), sort_entities);
+            for (int i = 0; i < num_ents; i++) {
+                LE_Entity* entity = entities[i];
                 float prevX, prevY;
                 LE_EntityGetPrevPosition(entity, &prevX, &prevY);
                 float x = (entity->posX - prevX) * interpolation + prevX;
                 float y = (entity->posY - prevY) * interpolation + prevY;
                 LE_DrawEntity(entity, (x - offsetX) * tileW * scaleW, (y - offsetY) * tileH * scaleH, scaleW, scaleH, dl);
-                iter = LE_EntityListNext(iter);
             }
         } break;
         case LE_LayerType_Custom: {

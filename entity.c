@@ -21,6 +21,7 @@ typedef struct {
     _LE_CollisionCallbackList* collisionCallbacks;
     _LE_EntityPropList* properties;
     float width, height;
+    int defaultDrawPriority;
     LE_EntityFlags flags;
 } _LE_EntityBuilder;
 
@@ -28,6 +29,7 @@ typedef struct {
     float posX, posY;
     float velX, velY;
     float width, height;
+    int drawPriority;
     LE_EntityFlags flags;
     float prevPosX, prevPosY;
     float lastDrawnX, lastDrawnY;
@@ -90,6 +92,10 @@ void LE_EntityBuilderSetFlags(LE_EntityBuilder* builder, LE_EntityFlags flags) {
     ((_LE_EntityBuilder*)builder)->flags = flags;
 }
 
+void LE_EntityBuilderSetDrawPriority(LE_EntityBuilder* builder, int drawPriority) {
+    ((_LE_EntityBuilder*)builder)->defaultDrawPriority = drawPriority;
+}
+
 void LE_EntityBuilderAppendFlags(LE_EntityBuilder* builder, LE_EntityFlags flags) {
     ((_LE_EntityBuilder*)builder)->flags |= flags;
 }
@@ -131,6 +137,7 @@ LE_Entity* LE_CreateEntity(LE_EntityList* list, LE_EntityBuilder* builder, float
     entity->flags = b->flags;
     entity->deleted = false;
     entity->platform = NULL;
+    entity->drawPriority = b->defaultDrawPriority;
     entity->textureCallbacks = b->textureCallbacks;
     entity->updateCallbacks = b->updateCallbacks;
     entity->collisionCallbacks = b->collisionCallbacks;
