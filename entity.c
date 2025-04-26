@@ -168,6 +168,7 @@ void LE_EntitySetProperty(LE_Entity* entity, LE_EntityProperty property, const c
 }
 
 void LE_EntityDelProperty(LE_Entity* entity, const char* name) {
+    if (LE_EntityIsDeleted(entity)) return;
     _LE_EntityPropList* prop = ((_LE_Entity*)entity)->properties;
     while (prop->next) {
         prop = prop->next;
@@ -182,6 +183,7 @@ void LE_EntityDelProperty(LE_Entity* entity, const char* name) {
 }
 
 bool LE_EntityGetProperty(LE_Entity* entity, LE_EntityProperty* property, const char* name) {
+    if (LE_EntityIsDeleted(entity)) return false;
     _LE_EntityPropList* prop = ((_LE_Entity*)entity)->properties;
     while (prop->next) {
         prop = prop->next;
@@ -194,6 +196,7 @@ bool LE_EntityGetProperty(LE_Entity* entity, LE_EntityProperty* property, const 
 }
 
 int LE_EntityNumProperties(LE_Entity* entity) {
+    if (LE_EntityIsDeleted(entity)) return 0;
     return LE_LL_Size(((_LE_Entity*)entity)->properties);
 }
 
@@ -255,6 +258,10 @@ void LE_UpdateEntity(LE_Entity* entity, float delta_time) {
 void LE_EntityGetPrevPosition(LE_Entity* entity, float* x, float* y) {
     if (x) *x = ((_LE_Entity*)entity)->prevPosX;
     if (y) *y = ((_LE_Entity*)entity)->prevPosY;
+}
+
+bool LE_EntityIsDeleted(LE_Entity* entity) {
+    return ((_LE_Entity*)entity)->deleted;
 }
 
 void LE_DrawEntity(LE_Entity* entity, float x, float y, float scaleW, float scaleH, LE_DrawList* dl) {

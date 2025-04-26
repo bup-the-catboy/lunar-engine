@@ -198,6 +198,7 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpo
             qsort(entities, num_ents, sizeof(*entities), sort_entities);
             for (int i = 0; i < num_ents; i++) {
                 LE_Entity* entity = entities[i];
+                if (LE_EntityIsDeleted(entity)) continue;
                 float prevX, prevY;
                 LE_EntityGetPrevPosition(entity, &prevX, &prevY);
                 float x = (entity->posX - prevX) * interpolation + prevX;

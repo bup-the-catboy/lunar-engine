@@ -84,7 +84,7 @@ void CONCAT(LE_RunCollision, AXIS)(LE_Entity* entity) {                         
     LE_EntityListIter* iter = LE_EntityListGetIter(LE_EntityGetList(entity));                                                 \
     while (iter) {                                                                                                            \
         LE_Entity* curr = LE_EntityListGet(iter);                                                                             \
-        if (curr == entity) {                                                                                                 \
+        if (curr == entity || LE_EntityIsDeleted(curr)) {                                                                     \
             iter = LE_EntityListNext(iter);                                                                                   \
             continue;                                                                                                         \
         }                                                                                                                     \
