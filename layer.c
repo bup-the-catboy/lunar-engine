@@ -2,6 +2,7 @@
 #include "lunarengine.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     float scrollOffsetX, scrollSpeedX;
@@ -140,8 +141,8 @@ void LE_Draw(LE_LayerList* layers, int screenW, int screenH, float interpolation
     }
 }
 
-static int sort_entities(const void* a, const void* b) {
-    return ((LE_Entity*)a)->drawPriority - ((LE_Entity*)b)->drawPriority;
+static int sort_entities(const void* left, const void* right) {
+    return (*(LE_Entity**)left)->drawPriority - (*(LE_Entity**)right)->drawPriority;
 }
 
 void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpolation, LE_DrawList* dl) {
@@ -188,7 +189,7 @@ void LE_DrawSingleLayer(LE_Layer* layer, int screenW, int screenH, float interpo
         case LE_LayerType_Entity: {
             int index = 0;
             int num_ents = LE_NumEntities(l->ptr);
-            LE_Entity* entities[LE_NumEntities(l->ptr)];
+            LE_Entity* entities[num_ents];
             LE_EntityListIter* iter = LE_EntityListGetIter(l->ptr);
             while (iter) {
                 entities[index++] = LE_EntityListGet(iter);
