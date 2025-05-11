@@ -112,6 +112,16 @@ void LE_GetCameraPos(LE_LayerList* layers, float* camX, float* camY) {
     if (camY) *camY = ll->value->cameraData.camPosY;
 }
 
+void LE_GlobalToLayerSpace(LE_Layer* layer, float in_x, float in_y, float* out_x, float* out_y) {
+    if (out_x) *out_x = (in_x + layer->scrollOffsetX) * layer->scaleW;
+    if (out_y) *out_y = (in_y + layer->scrollOffsetY) * layer->scaleH;
+}
+
+void LE_LayerToGlobalSpace(LE_Layer* layer, float in_x, float in_y, float* out_x, float* out_y) {
+    if (out_x) *out_x = in_x / layer->scaleW - layer->scrollOffsetX;
+    if (out_y) *out_y = in_y / layer->scaleH - layer->scrollOffsetY;
+}
+
 LE_LayerType LE_LayerGetType(LE_Layer* layer) {
     return ((_LE_Layer*)layer)->type;
 }
